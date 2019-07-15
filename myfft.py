@@ -14,21 +14,23 @@ def highpass_filter(src, a):
     h, w = src.shape
     cy, cx = int(h/2), int(w/2)
     rh, rw = int(a*cy), int(a*cx)
+    src = 20*np.log(src)
     fsrc = np.fft.fftshift(src)
     fdst = fsrc.copy()
     fdst[cy-rh:cy+rh, cx-rw:cx+rw] = 0
     fdst = np.fft.fftshift(fdst)
+    fdst = pow(math.e,fdst/20)
     dst = np.fft.ifft2(fdst)
     return np.uint8(dst.real)
 
 def lowpass_filter(src, a):
+    plt.subplot(131)
+    plt.imshow(src, cmap = 'gray')
     src = np.fft.fft2(src)
     h, w = src.shape
     cy, cx = int(h/2), int(w/2)
     rh, rw = int(a*cy), int(a*cx)
     fsrc = 20*np.log(src)
-    plt.subplot(131)
-    plt.imshow(src, cmap = 'gray')
     plt.subplot(132)
     plt.imshow(np.uint8(fsrc.real), cmap = 'gray')
     fdst = fsrc
