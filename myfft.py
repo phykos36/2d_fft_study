@@ -1,63 +1,65 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import math
 
-def fourier(src):
+def power_spectre(src):
     fimg = np.fft.fft2(src)
-    fimg = np.fft.fftshift(fimg)
     mag = 20*np.log(np.abs(fimg))
     return mag
 
 def highpass_filter(src, a):
-    src = np.fft.fft2(src)
+    fsrc = np.fft.fft2(src)
     h, w = src.shape
     cy, cx = int(h/2), int(w/2)
     rh, rw = int(a*cy), int(a*cx)
-    fsrc = np.fft.fftshift(src)
-    fdst = fsrc.copy()
-    fdst[cy-rh:cy+rh, cx-rw:cx+rw] = 0
-    fdst = np.fft.fftshift(fdst)
+    fsrc = 20*np.log(fsrc)
+    shift_fsrc = np.fft.fftshift(fsrc)
+    shift_fdst = shift_fsrc.copy()
+    shift_fdst[cy-rh:cy+rh, cx-rw:cx+rw] = 0
+    fdst = np.fft.ifftshift(shift_fdst)
+    fdst = pow(math.e,fdst/20)
     dst = np.fft.ifft2(fdst)
     return np.uint8(dst.real)
 
 def lowpass_filter(src, a):
-    src = np.fft.fft2(src)
+    plt.subplot(131)
+    plt.imshow(src, cmap = 'gray')
+    fsrc = np.fft.fft2(src)
     h, w = src.shape
     cy, cx = int(h/2), int(w/2)
     rh, rw = int(a*cy), int(a*cx)
-    fsrc = np.fft.fftshift(src)
-    plt.subplot(121)
+    fsrc = 20*np.log(fsrc)
+    plt.subplot(132)
     plt.imshow(np.uint8(fsrc.real), cmap = 'gray')
-    fdst = np.zeros(src.shape, dtype=complex)
-    fdst[cy-rh:cy+rh, cx-rw:cx+rw] = fsrc[cy-rh:cy+rh, cx-rw:cx+rw]
-    # plt.subplot(122)
-    # plt.imshow(np.uint8(fdst.real), cmap = 'gray')
-    # plt.show()
-    fdst = np.fft.fftshift(fdst)
+    fdst = fsrc
+    fdst[cy-rh:cy+rh, cx-rw:cx+rw] = 0
+    plt.subplot(133)
+    plt.imshow(np.uint8(fdst.real), cmap = 'gray')
+    plt.show()
+    fdst = pow(math.e,fdst/20)
     dst = np.fft.ifft2(fdst)
     return np.uint8(dst.real)    
 
 def main(path):
-    img = cv2.imread(path)
-    # compare = 60/img.shape
-    # img = cv2.resize(img,(60,60)) # この前にサイズ比からlowpassの倍率を決める
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    mag = fourier(gray)
-    limg = lowpass_filter(gray,0.9)
-    himg = highpass_filter(gray,0.1)
-    # bler = lowpass_filter(gray,compare)
+    src = cv2.imread(path)
+    gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+    mag = power_spectre(gray)
+    low_img = lowpass_filter(gray,0.9)
+    high_img = highpass_filter(low_img,0.005)
     plt.subplot(221)
     plt.imshow(gray, cmap = 'gray')
     plt.subplot(222)
     plt.imshow(mag, cmap = 'gray')
     plt.subplot(223)
-    plt.imshow(limg, cmap = 'gray')
+    plt.imshow(low_img, cmap = 'gray')
     plt.subplot(224)
-    plt.imshow(himg, cmap = 'gray')
+    plt.imshow(high_img, cmap = 'gray')
     plt.show()
+    cv2.imwrite("out.png", low_img)
 
 
-while True:
-    inp = input('file name? >')
-    if inp!='':break
-main(inp)
+# while True:
+#     inp = input('file name? >')
+#     if inp!='':break
+main('lena_gray.png')
