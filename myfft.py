@@ -17,7 +17,7 @@ def highpass_filter(src, a):
     shift_fsrc = np.fft.fftshift(fsrc)
     shift_fdst = shift_fsrc.copy()
     shift_fdst[cy-rh:cy+rh, cx-rw:cx+rw] = 0
-    fdst = np.fft.fftshift(shift_fdst)
+    fdst = np.fft.ifftshift(shift_fdst)
     fdst = pow(math.e,fdst/20)
     dst = np.fft.ifft2(fdst)
     return np.uint8(dst.real)
@@ -45,8 +45,8 @@ def main(path):
     src = cv2.imread(path)
     gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
     mag = power_spectre(gray)
-    low_img = lowpass_filter(gray,0.8)
-    high_img = highpass_filter(gray,0.1)
+    low_img = lowpass_filter(gray,0.9)
+    high_img = highpass_filter(gray,0.001)
     plt.subplot(221)
     plt.imshow(gray, cmap = 'gray')
     plt.subplot(222)
@@ -60,6 +60,6 @@ def main(path):
 
 
 # while True:
-#     inp = input('file name? >')
-#     if inp!='':break
+#     input = input('file name? >')
+#     if input!='':break
 main('lena_gray.png')
