@@ -5,7 +5,6 @@ import math
 
 def fourier(src):
     fimg = np.fft.fft2(src)
-    fimg = np.fft.fftshift(fimg)
     mag = 20*np.log(np.abs(fimg))
     return mag
 
